@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: roblox-key-website
-    runtime: node
-    plan: free
-    buildCommand: npm install
-    startCommand: npm start
