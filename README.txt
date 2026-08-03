@@ -33,72 +33,15 @@ Upload these files to GitHub
 Render setup
 ============
 
-Open Render.
-Open your service:
+You do not need to add Render environment variables for this version.
+
+Just upload these files to GitHub, then redeploy this Render service:
 
     roblox-key-system-hr3h
 
-Go to Environment.
+The Linkvertise links, unlock pass, and strict anti-bypass mode are already inside server.js.
 
-Add:
-
-    LINKVERTISE_URL
-
-Value:
-
-    https://link-target.net/7498733/mc4yEffjlo2m
-
-Add:
-
-    LINKVERTISE_URL_2
-
-Value:
-
-    https://link-hub.net/7498733/Raf2W9vpq3sS
-
-Add:
-
-    UNLOCK_PASS
-
-Value:
-
-    3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12
-
-Add:
-
-    KEY_SIGNING_SECRET
-
-Value:
-
-    make-this-a-long-random-secret-that-only-you-know
-
-Optional stronger anti-bypass:
-
-Add:
-
-    REQUIRE_ANTIBYPASS_TOKEN
-
-Value:
-
-    true
-
-Leave this unset unless Codex tells you to enable it:
-
-    STRICT_ANTIBYPASS_TOKEN
-
-Value:
-
-    false
-
-Add:
-
-    LINKVERTISE_ANTI_BYPASS_TOKEN
-
-Value:
-
-    3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12
-
-Only turn this on if your protected Linkvertise setup has Use anti-bypassing enabled and appends a short-lived token such as RS_EvaluationDT, hash, bypassId, or token to the destination URL.
+Your Linkvertise links must have Use anti-bypassing enabled. This makes Linkvertise append a short-lived token such as RS_EvaluationDT, hash, bypassId, or token to the destination URL. Without that token, the site blocks the checkpoint return.
 
 Then redeploy.
 
@@ -141,6 +84,6 @@ The return page now also requires the hidden browser session from /go and blocks
 Keys are signed on the server, so edited/fake key records are rejected.
 The Roblox loader can remember one valid Roblox account/device until the 24 hour key expires.
 If REQUIRE_ANTIBYPASS_TOKEN is true, checkpoint returns must include the short-lived anti-bypass token before the site will unlock or generate a key.
-If STRICT_ANTIBYPASS_TOKEN is false, missing tokens are allowed while known bypass referrers are still blocked. Turn strict on only after confirming Linkvertise is appending the expected token parameter.
+STRICT_ANTIBYPASS_TOKEN should be true when you want bypass-city style shortcuts blocked. If a real user gets blocked, Linkvertise is probably not appending the anti-bypass token to that link yet.
 
 The strongest protection is Linkvertise server-side API verification. This setup is made to be reliable while still blocking the easy shortcut URL problem.

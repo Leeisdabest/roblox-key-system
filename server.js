@@ -7,26 +7,20 @@ const path = require("path");
 const PORT = process.env.PORT || 3000;
 const KEY_LIFETIME_MS = 24 * 60 * 60 * 1000;
 const PENDING_LIFETIME_MS = 30 * 60 * 1000;
-const MIN_LINKVERTISE_TIME_MS = 25 * 1000;
+const MIN_LINKVERTISE_TIME_MS = 3 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = path.join(__dirname, "keys.json");
 
-const LINKVERTISE_URL =
-  process.env.LINKVERTISE_URL || "https://link-target.net/7498733/mc4yEffjlo2m";
-const LINKVERTISE_URL_2 =
-  process.env.LINKVERTISE_URL_2 || "https://link-hub.net/7498733/Raf2W9vpq3sS";
-const UNLOCK_PASS =
-  process.env.UNLOCK_PASS ||
-  "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
+const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
+const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
+const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
-const KEY_SIGNING_SECRET = process.env.KEY_SIGNING_SECRET || UNLOCK_PASS;
+const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
 const ANTIBYPASS_API_KEY = process.env.ANTIBYPASS_API_KEY || "";
-const LINKVERTISE_ANTI_BYPASS_TOKEN =
-  process.env.LINKVERTISE_ANTI_BYPASS_TOKEN ||
-  "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
-const REQUIRE_ANTIBYPASS_TOKEN = process.env.REQUIRE_ANTIBYPASS_TOKEN === "true";
-const STRICT_ANTIBYPASS_TOKEN = process.env.STRICT_ANTIBYPASS_TOKEN === "true";
+const LINKVERTISE_ANTI_BYPASS_TOKEN = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
+const REQUIRE_ANTIBYPASS_TOKEN = true;
+const STRICT_ANTIBYPASS_TOKEN = true;
 const rateBuckets = new Map();
 
 function loadKeys() {
