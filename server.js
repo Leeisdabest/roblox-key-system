@@ -252,6 +252,10 @@ async function verifyAntiBypass(url, req) {
     };
   }
 
+  if (!url.searchParams.get("RS_EvaluationDT") && url.searchParams.get("hash")) {
+    return { ok: true, mode: "linkvertise-hash-present" };
+  }
+
   if (!ANTIBYPASS_API_KEY) {
     return { ok: false, reason: "missing-api-key" };
   }
