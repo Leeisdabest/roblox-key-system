@@ -12,8 +12,8 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = path.join(__dirname, "keys.json");
 
-const LINKVERTISE_URL = "https://kys.linkvertise.lol/DTOM/65679535-1c38-44be-aeef-b88714a9ee89?antibypass=true&apimade=fl";
-const LINKVERTISE_URL_2 = "https://kys.linkvertise.lol/DTOM/618d9967-5d6d-4b1b-b106-0bf680c8f654?antibypass=true&apimade=fl";
+const LINKVERTISE_URL = "https://loot-link.com/s?MgZV8YM2";
+const LINKVERTISE_URL_2 = "https://loot-link.com/s?aIWnb6GR";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
@@ -226,6 +226,11 @@ function getJson(url, headers = {}) {
     });
     request.on("error", () => resolve(null));
   });
+}
+
+function withPuid(targetUrl, puid) {
+  const separator = targetUrl.includes("?") ? "&" : "?";
+  return `${targetUrl}${separator}puid=${encodeURIComponent(puid)}`;
 }
 
 async function verifyAntiBypass(url, req) {
@@ -552,6 +557,15 @@ function json(res, data, statusCode = 200) {
   res.end(JSON.stringify(data));
 }
 
+function text(res, message, statusCode = 200) {
+  res.writeHead(statusCode, {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+  });
+  res.end(message);
+}
+
 function redirect(res, location, extraHeaders = {}) {
   res.writeHead(302, {
     Location: location,
@@ -700,6 +714,30 @@ function createKeyPage(res, keys, session, req) {
   );
 }
 
+function hasLootlabsCompletion(keys, session, step, req) {
+  const pending = session && keys.__pending && keys.__pending[session];
+  const completion = pending && pending.lootlabs && pending.lootlabs[String(step)];
+  return Boolean(completion && completion.clientLock === clientLock(req));
+}
+
+function lootlabsWaitingPage(res, step, href) {
+  return page(
+    res,
+    "Waiting For LootLabs",
+    `<section class="hero">
+      <div class="topline">
+        <div class="brand"><span class="mark">N</span> Nin's Hub</div>
+        <span class="badge bad">Waiting</span>
+      </div>
+      <h1>Finish LootLabs first</h1>
+      <p>LootLabs has not confirmed checkpoint ${step} yet. Finish the task from the key page, then let it redirect back here.</p>
+      <div class="actions">
+        <a class="primary" href="${escapeHtml(href)}">Open Checkpoint ${step} Again</a>
+      </div>
+    </section>`
+  );
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const keys = loadKeys();
@@ -767,9 +805,34 @@ const server = http.createServer(async (req, res) => {
     saveFlow(keys, req, session, 1, keys.__pending[session].createdAt);
     saveKeys(keys);
 
-    return redirect(res, LINKVERTISE_URL, {
+    return redirect(res, withPuid(LINKVERTISE_URL, session), {
       "Set-Cookie": sessionCookieSet(session),
     });
+  }
+
+  if (url.pathname === "/lootlabs-postback") {
+    const clickId = String(url.searchParams.get("click_id") || url.searchParams.get("puid") || "");
+    const uniqueId = String(url.searchParams.get("unique_id") || url.searchParams.get("transaction_id") || makeSession());
+    const stepValue = String(url.searchParams.get("step") || "");
+    const pending = clickId && keys.__pending[clickId];
+
+    if (!pending) {
+      saveKeys(keys);
+      return text(res, "unknown click_id", 404);
+    }
+
+    const step = stepValue || (pending.step === 2 ? "2" : "1");
+    pending.lootlabs = pending.lootlabs || {};
+    pending.lootlabs[step] = {
+      uniqueId,
+      ip: String(url.searchParams.get("ip") || ""),
+      completedAt: Date.now(),
+      clientLock: pending.clientLock,
+    };
+    pending.expiresAt = Date.now() + PENDING_LIFETIME_MS;
+    keys.__pending[clickId] = pending;
+    saveKeys(keys);
+    return text(res, "ok");
   }
 
   if (url.pathname === "/checkpoint" || url.pathname === "/checkpoint-one") {
@@ -840,6 +903,11 @@ const server = http.createServer(async (req, res) => {
           </div>
         </section>`
       );
+    }
+
+    if (!hasLootlabsCompletion(keys, realSession, 1, req)) {
+      saveKeys(keys);
+      return lootlabsWaitingPage(res, 1, "/go");
     }
 
     if (Date.now() - pending.createdAt < MIN_LINKVERTISE_TIME_MS) {
@@ -921,7 +989,7 @@ const server = http.createServer(async (req, res) => {
     saveFlow(keys, req, realSession, 2, pending.createdAt);
     saveKeys(keys);
 
-    return redirect(res, LINKVERTISE_URL_2, {
+    return redirect(res, withPuid(LINKVERTISE_URL_2, realSession), {
       "Set-Cookie": sessionCookieSet(realSession),
     });
   }
@@ -999,6 +1067,11 @@ const server = http.createServer(async (req, res) => {
           </div>
         </section>`
       );
+    }
+
+    if (!hasLootlabsCompletion(keys, realSession, 2, req)) {
+      saveKeys(keys);
+      return lootlabsWaitingPage(res, 2, "/go2");
     }
 
     if (Date.now() - pending.createdAt < MIN_LINKVERTISE_TIME_MS) {
