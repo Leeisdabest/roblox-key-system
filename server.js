@@ -588,7 +588,22 @@ function getAnySession(req) {
 function flowKey(req) {
   return crypto
     .createHash("sha256")
-    .update(getClientId(req))
+    .update([
+      getClientId(req),
+      String(req.headers["user-agent"] || ""),
+      String(req.headers["accept-language"] || ""),
+    ].join("|"))
+    .digest("hex");
+}
+
+function clientLock(req) {
+  return crypto
+    .createHash("sha256")
+    .update([
+      getClientId(req),
+      String(req.headers["user-agent"] || ""),
+      String(req.headers["accept-language"] || ""),
+    ].join("|"))
     .digest("hex");
 }
 
@@ -598,31 +613,26 @@ function saveFlow(keys, req, session, step, createdAt = Date.now()) {
     session,
     step,
     createdAt,
+    clientLock: clientLock(req),
     expiresAt: Date.now() + PENDING_LIFETIME_MS,
   };
 }
 
 function getPendingFlow(keys, req, session) {
   const pending = session && keys.__pending[session];
-  if (pending) {
+  if (pending && pending.clientLock === clientLock(req)) {
     return { session, pending };
   }
 
   const flow = keys.__flows && keys.__flows[flowKey(req)];
-  if (flow && flow.session && keys.__pending[flow.session]) {
+  if (
+    flow &&
+    flow.clientLock === clientLock(req) &&
+    flow.session &&
+    keys.__pending[flow.session] &&
+    keys.__pending[flow.session].clientLock === clientLock(req)
+  ) {
     return { session: flow.session, pending: keys.__pending[flow.session], flow };
-  }
-
-  if (flow && flow.step) {
-    return {
-      session: flow.session || makeSession(),
-      pending: {
-        createdAt: flow.createdAt,
-        step: flow.step,
-        expiresAt: flow.expiresAt,
-      },
-      flow,
-    };
   }
 
   return { session, pending: null };
@@ -747,6 +757,7 @@ const server = http.createServer(async (req, res) => {
     keys.__pending[session] = {
       createdAt: Date.now(),
       step: 1,
+      clientLock: clientLock(req),
       expiresAt: Date.now() + PENDING_LIFETIME_MS,
     };
     saveFlow(keys, req, session, 1, keys.__pending[session].createdAt);
