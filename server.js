@@ -12,8 +12,8 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = path.join(__dirname, "keys.json");
 
-const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
-const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
+const LINKVERTISE_URL = "https://kys.linkvertise.lol/DTOM/65679535-1c38-44be-aeef-b88714a9ee89?antibypass=true&apimade=fl";
+const LINKVERTISE_URL_2 = "https://kys.linkvertise.lol/DTOM/618d9967-5d6d-4b1b-b106-0bf680c8f654?antibypass=true&apimade=fl";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
