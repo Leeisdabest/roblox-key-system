@@ -12,8 +12,8 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = path.join(__dirname, "keys.json");
 
-const LINKVERTISE_URL = "https://work.ink/20lq/nins-hub-last-checkpoint";
-const LINKVERTISE_URL_2 = "https://work.ink/20lq/nins-hub";
+const LINKVERTISE_URL = "https://work.ink/20lq/nins-hub";
+const LINKVERTISE_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
