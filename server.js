@@ -18,6 +18,9 @@ const WORKINK_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
 const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
 const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
 const DISCORD_INVITE_URL = "https://discord.gg/RjXT5T6jmd";
+const SELLIX_PAYMENT_URL = "https://nins-hub.sellix.cx/p/nins-hub-premium";
+const SELLIX_API_KEY = process.env.SELLIX_API_KEY || "";
+const SELLIX_PRODUCT_MATCH = "premium";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PREMIUM_ADMIN_PASS = "nins-premium-admin-5c8f7a2e9d3146b0";
 const PUBLIC_SITE = "https://ninshub.onrender.com";
@@ -51,12 +54,14 @@ function cleanStore(keys) {
   keys.__pending = keys.__pending || {};
   keys.__devices = keys.__devices || {};
   keys.__flows = keys.__flows || {};
+  keys.__sellixOrders = keys.__sellixOrders || {};
 
   for (const [key, data] of Object.entries(keys)) {
     if (
       key !== "__pending" &&
       key !== "__devices" &&
       key !== "__flows" &&
+      key !== "__sellixOrders" &&
       (!data.expiresAt || data.expiresAt <= now || !isValidKeyRecord(key, data))
     ) {
       delete keys[key];
@@ -108,6 +113,13 @@ function makeKey() {
 
 function makePremiumKey() {
   return `NINS-PREMIUM-${crypto.randomBytes(18).toString("base64url").toUpperCase()}`;
+}
+
+function cleanOrderId(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9_.-]/g, "")
+    .slice(0, 90);
 }
 
 function cleanId(value, maxLength = 80) {
@@ -1112,6 +1124,126 @@ function premiumAdminPage(res, generatedKey = "") {
   );
 }
 
+async function fetchSellixOrder(orderId) {
+  if (!SELLIX_API_KEY) {
+    return { ok: false, reason: "missing-sellix-api-key" };
+  }
+
+  const order = await getJson(`https://api.sellix.gg/v1/orders/${encodeURIComponent(orderId)}`, {
+    Authorization: `Bearer ${SELLIX_API_KEY}`,
+    Accept: "application/json",
+  });
+
+  if (!order || typeof order !== "object") {
+    return { ok: false, reason: "sellix-not-found" };
+  }
+
+  const data = order.data || order.order || order;
+  if (!data || typeof data !== "object" || !(data.id || data.uuid)) {
+    return { ok: false, reason: "sellix-not-found" };
+  }
+
+  return { ok: true, order: data };
+}
+
+function isPaidSellixOrder(order) {
+  const status = String(order.status || "").toLowerCase();
+  return ["paid", "completed", "delivering"].includes(status) || Boolean(order.paid_at);
+}
+
+function orderMatchesPremiumProduct(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const names = items
+    .map((item) => item.product_name || item.product || item.name || item.title || "")
+    .join(" ")
+    .toLowerCase();
+
+  const fallback = String(order.product_name || order.product || order.title || "").toLowerCase();
+  const haystack = `${names} ${fallback}`;
+
+  return haystack.includes("nin") && haystack.includes(SELLIX_PRODUCT_MATCH);
+}
+
+async function claimPremiumFromSellix(keys, orderId) {
+  keys.__sellixOrders = keys.__sellixOrders || {};
+
+  if (!orderId) {
+    return { ok: false, reason: "missing-order-id" };
+  }
+
+  if (keys.__sellixOrders[orderId]) {
+    return { ok: false, reason: "already-claimed" };
+  }
+
+  const result = await fetchSellixOrder(orderId);
+  if (!result.ok) {
+    return result;
+  }
+
+  const order = result.order;
+  if (!isPaidSellixOrder(order)) {
+    return { ok: false, reason: "not-paid", status: order.status || "unknown" };
+  }
+
+  if (!orderMatchesPremiumProduct(order)) {
+    return { ok: false, reason: "wrong-product" };
+  }
+
+  const buyer = order.customer_email || order.email || orderId;
+  const premium = createPremiumKey(keys, `sellix:${orderId}:${buyer}`);
+  premium.record.sellixOrderId = orderId;
+  premium.record.sellixStatus = order.status || "paid";
+  premium.record.sellixEmail = String(buyer || "").slice(0, 120);
+  premium.record.signature = signKeyRecord(premium.key, premium.record.createdAt, premium.record.expiresAt);
+
+  keys.__sellixOrders[orderId] = {
+    key: premium.key,
+    claimedAt: Date.now(),
+    buyer: premium.record.sellixEmail,
+    status: premium.record.sellixStatus,
+  };
+
+  return { ok: true, key: premium.key, order };
+}
+
+function premiumClaimPage(res, result = null, orderId = "") {
+  const message = result && !result.ok
+    ? `<p class="error">Could not verify that order: ${escapeHtml(result.reason || "unknown")}.</p>`
+    : "";
+
+  const keyBlock = result && result.ok
+    ? `<p>Your Premium key is ready:</p>
+       <code id="key">${escapeHtml(result.key)}</code>
+       <div class="actions">
+         <button class="primary" onclick="navigator.clipboard.writeText(document.getElementById('key').textContent)">Copy Premium Key</button>
+       </div>`
+    : "";
+
+  return page(
+    res,
+    "Claim Premium",
+    `<section class="key-view">
+      <div class="topline">
+        <div class="brand"><span class="mark">N</span> Nin's Hub</div>
+        <span class="badge good">Premium Claim</span>
+      </div>
+      <h1>I Bought Premium</h1>
+      <p>Paste your Sellix order ID. If Sellix says the order is paid, this page creates your lifetime Premium key.</p>
+      <form class="actions" method="get" action="/claim-premium">
+        <input class="input" name="order" value="${escapeHtml(orderId)}" placeholder="Sellix order ID" maxlength="90" />
+        <button class="primary" type="submit">Check Order</button>
+      </form>
+      ${message}
+      ${keyBlock}
+      <div class="actions">
+        <a class="secondary" href="${SELLIX_PAYMENT_URL}" target="_blank" rel="noopener">Buy Premium</a>
+        <a class="secondary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Need Help?</a>
+      </div>
+      <p class="tiny">Each paid Sellix order can only claim one Premium key.</p>
+    </section>`
+  );
+}
+
 function hasLootlabsCompletion(keys, session, step, req) {
   const pending = session && keys.__pending && keys.__pending[session];
   const completion = pending && pending.lootlabs && pending.lootlabs[String(step)];
@@ -1218,11 +1350,25 @@ const server = http.createServer(async (req, res) => {
           <div class="tile"><strong>Discord Support</strong><span>Buy or claim Premium through the official Discord.</span></div>
         </div>
         <div class="actions">
-          <a class="primary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Buy In Discord</a>
+          <a class="primary" href="${SELLIX_PAYMENT_URL}" target="_blank" rel="noopener">Buy With Sellix</a>
+          <a class="secondary" href="/premium-claim">I Bought</a>
+          <a class="secondary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Need Help?</a>
           <a class="secondary" href="/generate-key">Back To Free Key</a>
         </div>
       </section>`
     );
+  }
+
+  if (url.pathname === "/premium-claim") {
+    saveKeys(keys);
+    return premiumClaimPage(res);
+  }
+
+  if (url.pathname === "/claim-premium") {
+    const orderId = cleanOrderId(url.searchParams.get("order"));
+    const claim = await claimPremiumFromSellix(keys, orderId);
+    saveKeys(keys);
+    return premiumClaimPage(res, claim, orderId);
   }
 
   if (url.pathname === "/premium-admin") {
