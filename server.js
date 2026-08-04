@@ -16,8 +16,6 @@ const WORKINK_URL = "https://work.ink/20lq/nins-hub";
 const WORKINK_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
 const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
 const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
-const LOOTLABS_URL = "https://loot-link.com/s?MgZV8YM2";
-const LOOTLABS_URL_2 = "https://loot-link.com/s?aIWnb6GR";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
@@ -194,16 +192,12 @@ function getGateTarget(provider, step) {
     return step === 2 ? LINKVERTISE_URL_2 : LINKVERTISE_URL;
   }
 
-  if (provider === "lootlabs") {
-    return step === 2 ? LOOTLABS_URL_2 : LOOTLABS_URL;
-  }
-
   return step === 2 ? WORKINK_URL_2 : WORKINK_URL;
 }
 
 function getProvider(url, fallback = "workink") {
   const provider = String(url.searchParams.get("provider") || fallback || "workink").toLowerCase();
-  if (provider === "linkvertise" || provider === "lootlabs") {
+  if (provider === "linkvertise") {
     return provider;
   }
 
@@ -211,10 +205,6 @@ function getProvider(url, fallback = "workink") {
 }
 
 function providerLabel(provider) {
-  if (provider === "lootlabs") {
-    return "LootLabs";
-  }
-
   return provider === "linkvertise" ? "Linkvertise" : "Work.ink";
 }
 
@@ -236,14 +226,10 @@ function isGateReturn(req) {
       host === "link-hub.net" ||
       host.endsWith(".link-hub.net") ||
       host === "direct-link.net" ||
-      host.endsWith(".direct-link.net") ||
-      host === "loot-link.com" ||
-      host.endsWith(".loot-link.com") ||
-      host === "lootlabs.gg" ||
-      host.endsWith(".lootlabs.gg")
+      host.endsWith(".direct-link.net")
     );
   } catch {
-    return referer.includes("work.ink") || referer.includes("linkvertise") || referer.includes("link-target") || referer.includes("link-hub") || referer.includes("direct-link") || referer.includes("loot-link") || referer.includes("lootlabs");
+    return referer.includes("work.ink") || referer.includes("linkvertise") || referer.includes("link-target") || referer.includes("link-hub") || referer.includes("direct-link");
   }
 }
 
@@ -257,11 +243,10 @@ function gateReturnBlockedPage(res, step) {
         <span class="badge bad">Jump Blocked</span>
       </div>
       <h1>Open a checkpoint first</h1>
-      <p>Checkpoint ${step} only unlocks when Work.ink, Linkvertise, or LootLabs sends you back here. Pasting the checkpoint link directly will not count.</p>
+      <p>Checkpoint ${step} only unlocks when Work.ink or Linkvertise sends you back here. Pasting the checkpoint link directly will not count.</p>
       <div class="actions">
         <a class="primary provider-option" href="${step === 1 ? "/go?provider=workink" : "/go2?provider=workink"}"><span class="provider-logo workink">W</span>Open Work.ink</a>
         <a class="secondary provider-option" href="${step === 1 ? "/go?provider=linkvertise" : "/go2?provider=linkvertise"}"><span class="provider-logo linkvertise">Lv</span>Open Linkvertise</a>
-        <a class="secondary provider-option" href="${step === 1 ? "/go?provider=lootlabs" : "/go2?provider=lootlabs"}"><span class="provider-logo lootlabs">LL</span>Open LootLabs</a>
         <a class="secondary" href="/generate-key">Start Again</a>
       </div>
     </section>`
@@ -738,10 +723,6 @@ function page(res, title, body, extraHeaders = {}) {
       background: linear-gradient(135deg, #ff8a00, #ff4d4d);
       box-shadow: 0 0 22px rgba(255, 138, 0, 0.24);
     }
-    .provider-logo.lootlabs {
-      background: linear-gradient(135deg, #5b67ff, #22d3ee);
-      box-shadow: 0 0 22px rgba(91, 103, 255, 0.26);
-    }
     button:disabled { cursor: not-allowed; opacity: 0.6; }
     code {
       display: block;
@@ -1108,7 +1089,6 @@ const server = http.createServer(async (req, res) => {
           <div class="actions">
             <a class="primary provider-option" href="/go?provider=workink"><span class="provider-logo workink">W</span>Open Work.ink Again</a>
             <a class="secondary provider-option" href="/go?provider=linkvertise"><span class="provider-logo linkvertise">Lv</span>Open Linkvertise Again</a>
-            <a class="secondary provider-option" href="/go?provider=lootlabs"><span class="provider-logo lootlabs">LL</span>Open LootLabs Again</a>
           </div>
         </section>`
       );
@@ -1124,11 +1104,10 @@ const server = http.createServer(async (req, res) => {
           <span class="badge">24 Hour Access</span>
         </div>
         <h1>Get Your Key</h1>
-        <p>Choose Work.ink, Linkvertise, or LootLabs for checkpoint 1. After that, checkpoint 2 must be completed before the 24 hour key is generated.</p>
+        <p>Choose Work.ink or Linkvertise for checkpoint 1. After that, checkpoint 2 must be completed before the 24 hour key is generated.</p>
         <div class="actions">
           <a class="primary provider-option" href="/go?provider=workink"><span class="provider-logo workink">W</span>Use Work.ink</a>
           <a class="secondary provider-option" href="/go?provider=linkvertise"><span class="provider-logo linkvertise">Lv</span>Use Linkvertise</a>
-          <a class="secondary provider-option" href="/go?provider=lootlabs"><span class="provider-logo lootlabs">LL</span>Use LootLabs</a>
         </div>
         <div class="grid">
           <div class="tile"><strong>Session Locked</strong><span>The return must match this browser session.</span></div>
