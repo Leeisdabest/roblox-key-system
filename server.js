@@ -12,8 +12,10 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = path.join(__dirname, "keys.json");
 
-const LINKVERTISE_URL = "https://work.ink/20lq/nins-hub";
-const LINKVERTISE_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
+const WORKINK_URL = "https://work.ink/20lq/nins-hub";
+const WORKINK_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
+const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
+const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
@@ -185,7 +187,24 @@ function isBypassReferer(req) {
   ].some((name) => referer.includes(name));
 }
 
-function isWorkInkReturn(req) {
+function getGateTarget(provider, step) {
+  if (provider === "linkvertise") {
+    return step === 2 ? LINKVERTISE_URL_2 : LINKVERTISE_URL;
+  }
+
+  return step === 2 ? WORKINK_URL_2 : WORKINK_URL;
+}
+
+function getProvider(url, fallback = "workink") {
+  const provider = String(url.searchParams.get("provider") || fallback || "workink").toLowerCase();
+  return provider === "linkvertise" ? "linkvertise" : "workink";
+}
+
+function providerLabel(provider) {
+  return provider === "linkvertise" ? "Linkvertise" : "Work.ink";
+}
+
+function isGateReturn(req) {
   const referer = getReferer(req);
   if (!referer) {
     return false;
@@ -193,13 +212,24 @@ function isWorkInkReturn(req) {
 
   try {
     const host = new URL(referer).hostname.toLowerCase();
-    return host === "work.ink" || host.endsWith(".work.ink");
+    return (
+      host === "work.ink" ||
+      host.endsWith(".work.ink") ||
+      host === "linkvertise.com" ||
+      host.endsWith(".linkvertise.com") ||
+      host === "link-target.net" ||
+      host.endsWith(".link-target.net") ||
+      host === "link-hub.net" ||
+      host.endsWith(".link-hub.net") ||
+      host === "direct-link.net" ||
+      host.endsWith(".direct-link.net")
+    );
   } catch {
-    return referer.includes("work.ink");
+    return referer.includes("work.ink") || referer.includes("linkvertise") || referer.includes("link-target") || referer.includes("link-hub") || referer.includes("direct-link");
   }
 }
 
-function workInkReturnBlockedPage(res, step) {
+function gateReturnBlockedPage(res, step) {
   return page(
     res,
     "Checkpoint Locked",
@@ -208,10 +238,11 @@ function workInkReturnBlockedPage(res, step) {
         <div class="brand"><span class="mark">N</span> Nin's Hub</div>
         <span class="badge bad">Jump Blocked</span>
       </div>
-      <h1>Open Work.ink first</h1>
-      <p>Checkpoint ${step} only unlocks when Work.ink sends you back here. Pasting the checkpoint link directly will not count.</p>
+      <h1>Open a checkpoint first</h1>
+      <p>Checkpoint ${step} only unlocks when Work.ink or Linkvertise sends you back here. Pasting the checkpoint link directly will not count.</p>
       <div class="actions">
-        <a class="primary" href="${step === 1 ? "/go" : "/go2"}">Open Checkpoint ${step}</a>
+        <a class="primary" href="${step === 1 ? "/go?provider=workink" : "/go2"}">Open Work.ink</a>
+        <a class="secondary" href="${step === 1 ? "/go?provider=linkvertise" : "/go2?provider=linkvertise"}">Open Linkvertise</a>
         <a class="secondary" href="/generate-key">Start Again</a>
       </div>
     </section>`
@@ -983,14 +1014,14 @@ function hasLootlabsCompletion(keys, session, step, req) {
 function lootlabsWaitingPage(res, step, href) {
   return page(
     res,
-        "Waiting For Work.ink",
+        "Waiting For Checkpoint",
     `<section class="hero">
       <div class="topline">
         <div class="brand"><span class="mark">N</span> Nin's Hub</div>
         <span class="badge bad">Waiting</span>
       </div>
-      <h1>Finish Work.ink first</h1>
-      <p>Finish checkpoint ${step} from the key page, then let Work.ink redirect back here.</p>
+      <h1>Finish checkpoint first</h1>
+      <p>Finish checkpoint ${step} from the key page, then let it redirect back here.</p>
       <div class="actions">
         <a class="primary" href="${escapeHtml(href)}">Open Checkpoint ${step} Again</a>
       </div>
@@ -1015,16 +1046,17 @@ const server = http.createServer(async (req, res) => {
       saveKeys(keys);
       return page(
         res,
-        "Finish Work.ink",
+        "Finish Checkpoint",
         `<section class="hero">
           <div class="topline">
             <div class="brand"><span class="mark">N</span> Nin's Hub</div>
             <span class="badge bad">Not Verified</span>
           </div>
           <h1>Finish Checkpoint 1</h1>
-          <p>You came back to the key page, so no key was generated. Finish the first Work.ink checkpoint until it sends you back automatically.</p>
+          <p>You came back to the key page, so no key was generated. Finish the first checkpoint until it sends you back automatically.</p>
           <div class="actions">
-            <a class="primary" href="/go">Open Checkpoint 1 Again</a>
+            <a class="primary" href="/go?provider=workink">Open Work.ink Again</a>
+            <a class="secondary" href="/go?provider=linkvertise">Open Linkvertise Again</a>
           </div>
         </section>`
       );
@@ -1040,25 +1072,28 @@ const server = http.createServer(async (req, res) => {
           <span class="badge">24 Hour Access</span>
         </div>
         <h1>Get Your Key</h1>
-        <p>Open checkpoint 1 from this page. After that, checkpoint 2 must be completed before the 24 hour key is generated.</p>
+        <p>Choose Work.ink or Linkvertise for checkpoint 1. After that, checkpoint 2 must be completed before the 24 hour key is generated.</p>
         <div class="actions">
-          <a class="primary" href="/go">Open Checkpoint 1</a>
+          <a class="primary" href="/go?provider=workink">Use Work.ink</a>
+          <a class="secondary" href="/go?provider=linkvertise">Use Linkvertise</a>
         </div>
         <div class="grid">
           <div class="tile"><strong>Session Locked</strong><span>The return must match this browser session.</span></div>
-          <div class="tile"><strong>2 Checkpoints</strong><span>Both Work.ink steps must be completed.</span></div>
+          <div class="tile"><strong>2 Checkpoints</strong><span>Both steps must be completed on the provider they choose.</span></div>
           <div class="tile"><strong>24 Hour Key</strong><span>Keys expire automatically after one day.</span></div>
         </div>
-        <p class="tiny">Backing out of Work.ink will not generate a key.</p>
+        <p class="tiny">Backing out of a checkpoint will not generate a key.</p>
       </section>`
     );
   }
 
   if (url.pathname === "/go") {
     const session = makeSession();
+    const provider = getProvider(url);
     keys.__pending[session] = {
       createdAt: Date.now(),
       step: 1,
+      provider,
       step1Started: true,
       step1Used: false,
       step2Started: false,
@@ -1069,7 +1104,7 @@ const server = http.createServer(async (req, res) => {
     saveFlow(keys, req, session, 1, keys.__pending[session].createdAt);
     saveKeys(keys);
 
-    return redirect(res, withGateState(LINKVERTISE_URL, session, 1), {
+    return redirect(res, withGateState(getGateTarget(provider, 1), session, 1), {
       "Set-Cookie": sessionCookieSet(session),
     });
   }
@@ -1122,8 +1157,8 @@ const server = http.createServer(async (req, res) => {
             <div class="brand"><span class="mark">N</span> Nin's Hub</div>
             <span class="badge bad">Bypass Blocked</span>
           </div>
-          <h1>Open Work.ink normally</h1>
-          <p>Start from the key page and complete Work.ink normally.</p>
+          <h1>Open the checkpoint normally</h1>
+          <p>Start from the key page and complete the checkpoint normally.</p>
           <div class="actions">
             <a class="primary" href="/generate-key">Start Again</a>
           </div>
@@ -1158,9 +1193,9 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    if (REQUIRE_WORKINK_RETURN && !isWorkInkReturn(req)) {
+    if (REQUIRE_WORKINK_RETURN && !isGateReturn(req)) {
       saveKeys(keys);
-      return workInkReturnBlockedPage(res, 1);
+      return gateReturnBlockedPage(res, 1);
     }
 
     if (!pending || pending.step !== 1 || pending.step1Used) {
@@ -1200,7 +1235,7 @@ const server = http.createServer(async (req, res) => {
           <h1>Checkpoint 1 was not completed</h1>
           <p>The return happened too quickly. Go through checkpoint 1 normally and let it redirect you here.</p>
           <div class="actions">
-            <a class="primary" href="/go">Open Checkpoint 1 Again</a>
+            <a class="primary" href="/go?provider=${escapeHtml(pending.provider || "workink")}">Open Checkpoint 1 Again</a>
           </div>
         </section>`
       );
@@ -1225,9 +1260,9 @@ const server = http.createServer(async (req, res) => {
           <span class="badge good">Checkpoint 1 Complete</span>
         </div>
         <h1>One more step</h1>
-          <p>Checkpoint 1 is verified. Open checkpoint 2 and let Work.ink redirect you back here to generate your 24 hour key.</p>
+          <p>Checkpoint 1 is verified through ${escapeHtml(providerLabel(pending.provider))}. Open checkpoint 2 and let it redirect you back here to generate your 24 hour key.</p>
         <div class="actions">
-          <a class="primary" href="/go2">Open Checkpoint 2</a>
+          <a class="primary" href="/go2?provider=${escapeHtml(pending.provider || "workink")}">Open Checkpoint 2</a>
         </div>
       </section>`
       ,
@@ -1262,13 +1297,14 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
+    pending.provider = getProvider(url, pending.provider);
     pending.createdAt = Date.now();
     pending.expiresAt = Date.now() + PENDING_LIFETIME_MS;
     keys.__pending[realSession] = pending;
     saveFlow(keys, req, realSession, 2, pending.createdAt);
     saveKeys(keys);
 
-    return redirect(res, withGateState(LINKVERTISE_URL_2, realSession, 2), {
+    return redirect(res, withGateState(getGateTarget(pending.provider, 2), realSession, 2), {
       "Set-Cookie": sessionCookieSet(realSession),
     });
   }
@@ -1295,8 +1331,8 @@ const server = http.createServer(async (req, res) => {
             <div class="brand"><span class="mark">N</span> Nin's Hub</div>
             <span class="badge bad">Bypass Blocked</span>
           </div>
-          <h1>Open Work.ink normally</h1>
-          <p>Start from the key page and complete both Work.ink checkpoints normally.</p>
+          <h1>Open the checkpoint normally</h1>
+          <p>Start from the key page and complete both checkpoints normally.</p>
           <div class="actions">
             <a class="primary" href="/generate-key">Start Again</a>
           </div>
@@ -1323,17 +1359,17 @@ const server = http.createServer(async (req, res) => {
             <span class="badge bad">Locked</span>
           </div>
           <h1>Wrong Return</h1>
-          <p>The return pass is wrong. Make sure your Work.ink destination uses the checkpoint URL exactly.</p>
+          <p>The return pass is wrong. Make sure your checkpoint destination uses the return URL exactly.</p>
           <div class="actions">
-            <a class="primary" href="/generate-key">Go Through Work.ink</a>
+            <a class="primary" href="/generate-key">Go Through Checkpoints</a>
           </div>
         </section>`
       );
     }
 
-    if (REQUIRE_WORKINK_RETURN && !isWorkInkReturn(req)) {
+    if (REQUIRE_WORKINK_RETURN && !isGateReturn(req)) {
       saveKeys(keys);
-      return workInkReturnBlockedPage(res, 2);
+      return gateReturnBlockedPage(res, 2);
     }
 
     if (!pending || pending.step !== 2 || !pending.step2Started || pending.step2Used) {
@@ -1373,7 +1409,7 @@ const server = http.createServer(async (req, res) => {
           <h1>Checkpoint 2 was not completed</h1>
           <p>The return happened too quickly. Go through checkpoint 2 normally and let it redirect you back.</p>
           <div class="actions">
-            <a class="primary" href="/go2">Open Checkpoint 2 Again</a>
+            <a class="primary" href="/go2?provider=${escapeHtml(pending.provider || "workink")}">Open Checkpoint 2 Again</a>
           </div>
         </section>`
       );
@@ -1397,9 +1433,9 @@ const server = http.createServer(async (req, res) => {
           <span class="badge bad">Shortcut Blocked</span>
         </div>
         <h1>Locked</h1>
-          <p>This shortcut is disabled. Finish Work.ink until it opens the verified return page.</p>
+          <p>This shortcut is disabled. Finish the checkpoints until they open the verified return page.</p>
         <div class="actions">
-          <a class="primary" href="/generate-key">Go Through Work.ink</a>
+          <a class="primary" href="/generate-key">Go Through Checkpoints</a>
         </div>
       </section>`
     );
