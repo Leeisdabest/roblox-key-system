@@ -25,6 +25,7 @@ const ANTIBYPASS_API_KEY = "1409cc373e11bc24318e4b6703222a538a82d0202b986b30ad69
 const LINKVERTISE_ANTI_BYPASS_TOKEN = "1409cc373e11bc24318e4b6703222a538a82d0202b986b30ad6959ca950db622";
 const REQUIRE_ANTIBYPASS_TOKEN = true;
 const STRICT_ANTIBYPASS_TOKEN = true;
+const REQUIRE_WORKINK_RETURN = true;
 const rateBuckets = new Map();
 
 function loadKeys() {
@@ -182,6 +183,39 @@ function isBypassReferer(req) {
     "bypassbot",
     "linkvertisebypass",
   ].some((name) => referer.includes(name));
+}
+
+function isWorkInkReturn(req) {
+  const referer = getReferer(req);
+  if (!referer) {
+    return false;
+  }
+
+  try {
+    const host = new URL(referer).hostname.toLowerCase();
+    return host === "work.ink" || host.endsWith(".work.ink");
+  } catch {
+    return referer.includes("work.ink");
+  }
+}
+
+function workInkReturnBlockedPage(res, step) {
+  return page(
+    res,
+    "Checkpoint Locked",
+    `<section class="hero">
+      <div class="topline">
+        <div class="brand"><span class="mark">N</span> Nin's Hub</div>
+        <span class="badge bad">Jump Blocked</span>
+      </div>
+      <h1>Open Work.ink first</h1>
+      <p>Checkpoint ${step} only unlocks when Work.ink sends you back here. Pasting the checkpoint link directly will not count.</p>
+      <div class="actions">
+        <a class="primary" href="${step === 1 ? "/go" : "/go2"}">Open Checkpoint ${step}</a>
+        <a class="secondary" href="/generate-key">Start Again</a>
+      </div>
+    </section>`
+  );
 }
 
 function getAntiBypassToken(url) {
@@ -1124,6 +1158,11 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
+    if (REQUIRE_WORKINK_RETURN && !isWorkInkReturn(req)) {
+      saveKeys(keys);
+      return workInkReturnBlockedPage(res, 1);
+    }
+
     if (!pending || pending.step !== 1 || pending.step1Used) {
       saveKeys(keys);
       return page(
@@ -1290,6 +1329,11 @@ const server = http.createServer(async (req, res) => {
           </div>
         </section>`
       );
+    }
+
+    if (REQUIRE_WORKINK_RETURN && !isWorkInkReturn(req)) {
+      saveKeys(keys);
+      return workInkReturnBlockedPage(res, 2);
     }
 
     if (!pending || pending.step !== 2 || !pending.step2Started || pending.step2Used) {
