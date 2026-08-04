@@ -360,6 +360,7 @@ function page(res, title, body, extraHeaders = {}) {
       --red: #ff5d73;
       --gold: #ffd36a;
       --pink: #ff4fd8;
+      --purple: #9b5cff;
       --mx: 50vw;
       --my: 45vh;
     }
@@ -371,12 +372,12 @@ function page(res, title, body, extraHeaders = {}) {
       place-items: center;
       padding: 24px;
       background:
-        radial-gradient(circle at 18% 12%, rgba(102, 117, 255, 0.30), transparent 31%),
-        radial-gradient(circle at 82% 76%, rgba(40, 210, 127, 0.19), transparent 28%),
-        radial-gradient(circle at 68% 16%, rgba(255, 79, 216, 0.16), transparent 24%),
-        linear-gradient(135deg, rgba(255,255,255,0.035), transparent 30%),
-        repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 82px),
-        repeating-linear-gradient(0deg, rgba(255,255,255,0.032) 0 1px, transparent 1px 82px),
+        radial-gradient(circle at 18% 14%, rgba(102, 117, 255, 0.28), transparent 27%),
+        radial-gradient(circle at 82% 72%, rgba(40, 210, 127, 0.18), transparent 24%),
+        radial-gradient(circle at 58% 8%, rgba(255, 79, 216, 0.12), transparent 19%),
+        linear-gradient(142deg, rgba(255,255,255,0.045), transparent 28%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.052) 0 1px, transparent 1px 74px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 74px),
         var(--bg);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
@@ -388,22 +389,80 @@ function page(res, title, body, extraHeaders = {}) {
       position: fixed;
       inset: 0;
       background:
-        linear-gradient(115deg, transparent 0 38%, rgba(34, 211, 238, 0.05) 48%, transparent 58%),
-        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.045), transparent 21%);
+        linear-gradient(115deg, transparent 0 35%, rgba(34, 211, 238, 0.055) 47%, transparent 59%),
+        linear-gradient(245deg, transparent 0 42%, rgba(155, 92, 255, 0.04) 50%, transparent 62%),
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.035), transparent 15%);
       pointer-events: none;
       z-index: 0;
+    }
+    body::after {
+      animation: driftLines 9s linear infinite;
+      content: "";
+      position: fixed;
+      inset: -20%;
+      background:
+        repeating-linear-gradient(115deg, transparent 0 44px, rgba(34, 211, 238, 0.035) 45px 46px, transparent 47px 112px);
+      opacity: 0.55;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      z-index: 0;
+    }
+    @keyframes driftLines {
+      from { transform: translate3d(-24px, -18px, 0); }
+      to { transform: translate3d(24px, 18px, 0); }
+    }
+    .ambient-field {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-field span {
+      animation: floatChip 8s ease-in-out infinite;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 22px 54px rgba(0,0,0,0.24);
+      position: absolute;
+    }
+    .ambient-field span:nth-child(1) {
+      background: linear-gradient(135deg, rgba(34,211,238,0.18), rgba(102,117,255,0.04));
+      height: 120px;
+      left: 6%;
+      top: 16%;
+      width: 120px;
+    }
+    .ambient-field span:nth-child(2) {
+      animation-delay: -2.4s;
+      background: linear-gradient(135deg, rgba(40,210,127,0.14), rgba(255,211,106,0.04));
+      bottom: 12%;
+      height: 150px;
+      right: 8%;
+      width: 150px;
+    }
+    .ambient-field span:nth-child(3) {
+      animation-delay: -4.8s;
+      background: linear-gradient(135deg, rgba(255,79,216,0.13), rgba(155,92,255,0.05));
+      height: 86px;
+      right: 22%;
+      top: 10%;
+      width: 86px;
+    }
+    @keyframes floatChip {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.55; }
+      50% { transform: translateY(-18px) rotate(7deg); opacity: 0.85; }
     }
     .cursor-glow {
       position: fixed;
       left: var(--mx);
       top: var(--my);
-      width: min(46vw, 480px);
-      height: min(46vw, 480px);
+      width: min(22vw, 210px);
+      height: min(22vw, 210px);
       background:
-        radial-gradient(circle, rgba(34, 211, 238, 0.22), rgba(102, 117, 255, 0.13) 38%, rgba(40, 210, 127, 0.08) 54%, transparent 72%);
+        radial-gradient(circle, rgba(34, 211, 238, 0.18), rgba(102, 117, 255, 0.09) 42%, transparent 72%);
       border-radius: 999px;
-      filter: blur(12px);
-      opacity: 0.76;
+      filter: blur(8px);
+      opacity: 0.48;
       pointer-events: none;
       transform: translate(-50%, -50%);
       z-index: 0;
@@ -411,13 +470,16 @@ function page(res, title, body, extraHeaders = {}) {
     main {
       position: relative;
       z-index: 1;
-      width: min(900px, 100%);
-      background: var(--panel);
+      width: min(940px, 100%);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.075), transparent 18%),
+        linear-gradient(180deg, rgba(13,17,28,0.92), rgba(5,8,16,0.88));
       border: 1px solid var(--line);
-      border-radius: 24px;
+      border-radius: 28px;
       box-shadow:
-        0 30px 90px rgba(0, 0, 0, 0.62),
-        0 0 80px rgba(34, 211, 238, 0.12),
+        0 34px 110px rgba(0, 0, 0, 0.68),
+        0 0 100px rgba(34, 211, 238, 0.16),
+        0 0 140px rgba(155, 92, 255, 0.08),
         inset 0 1px 0 rgba(255,255,255,0.08);
       overflow: hidden;
       padding: 0;
@@ -427,18 +489,26 @@ function page(res, title, body, extraHeaders = {}) {
     main::before {
       content: "";
       display: block;
-      height: 5px;
-      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--gold), var(--pink));
+      height: 6px;
+      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--gold), var(--pink), var(--blue));
+      background-size: 220% 100%;
+      animation: railGlow 5s linear infinite;
+      box-shadow: 0 0 28px rgba(34, 211, 238, 0.48);
+    }
+    @keyframes railGlow {
+      from { background-position: 0 0; }
+      to { background-position: 220% 0; }
     }
     main::after {
       content: "";
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.08), transparent 24%),
-        linear-gradient(125deg, transparent 24%, rgba(34, 211, 238, 0.06), transparent 54%);
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.045), transparent 16%),
+        linear-gradient(125deg, transparent 22%, rgba(34, 211, 238, 0.05), transparent 54%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 28px);
       mix-blend-mode: screen;
-      opacity: 0.72;
+      opacity: 0.45;
       pointer-events: none;
       z-index: -1;
     }
@@ -461,19 +531,37 @@ function page(res, title, body, extraHeaders = {}) {
       font-weight: 900;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      text-shadow: 0 0 24px rgba(34, 211, 238, 0.18);
+    }
+    .brand-title {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.02em;
+    }
+    .brand-letter {
+      animation: brandLetterIn 0.45s ease forwards;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    @keyframes brandLetterIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .mark {
       align-items: center;
       background: linear-gradient(135deg, var(--blue), var(--green));
-      border-radius: 14px;
-      box-shadow: 0 16px 36px rgba(34, 211, 238, 0.22), inset 0 1px 0 rgba(255,255,255,0.28);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 15px;
+      box-shadow: 0 16px 36px rgba(34, 211, 238, 0.28), 0 0 30px rgba(102,117,255,0.16), inset 0 1px 0 rgba(255,255,255,0.30);
       display: inline-flex;
       height: 40px;
       justify-content: center;
       width: 40px;
     }
     .badge {
-      background: rgba(255,255,255,0.055);
+      background: linear-gradient(135deg, rgba(255,255,255,0.105), rgba(255,255,255,0.035));
       border: 1px solid rgba(111, 131, 255, 0.42);
       border-radius: 999px;
       color: #dce3ff;
@@ -483,6 +571,7 @@ function page(res, title, body, extraHeaders = {}) {
       letter-spacing: 0.04em;
       padding: 8px 11px;
       text-transform: uppercase;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 32px rgba(0,0,0,0.18);
     }
     .badge.good { border-color: rgba(40, 210, 127, 0.45); color: #9dffc9; }
     .badge.bad { border-color: rgba(255, 93, 115, 0.45); color: #ffb7c1; }
@@ -491,11 +580,11 @@ function page(res, title, body, extraHeaders = {}) {
       font-size: clamp(34px, 7vw, 64px);
       line-height: 0.95;
       letter-spacing: 0;
-      background: linear-gradient(90deg, #ffffff, #d9f7ff 42%, #9dffc9);
+      background: linear-gradient(92deg, #ffffff, #d9f7ff 32%, #9dffc9 62%, #ffd36a);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow: 0 18px 55px rgba(34, 211, 238, 0.18);
+      text-shadow: 0 18px 55px rgba(34, 211, 238, 0.22);
     }
     p {
       color: var(--muted);
@@ -522,10 +611,12 @@ function page(res, title, body, extraHeaders = {}) {
       font-weight: 700;
       margin-top: 0;
       padding: 14px 20px;
+      position: relative;
       text-decoration: none;
-      transition: transform 0.16s ease, filter 0.16s ease, border-color 0.16s ease;
+      transition: transform 0.16s ease, filter 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 16px 34px rgba(40, 210, 127, 0.18);
     }
-    a:hover, button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    a:hover, button:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 22px 42px rgba(34, 211, 238, 0.19); }
     .primary {
       background: linear-gradient(135deg, var(--blue), var(--cyan));
       box-shadow: 0 16px 34px rgba(34, 211, 238, 0.24);
@@ -533,6 +624,7 @@ function page(res, title, body, extraHeaders = {}) {
     .secondary {
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 28px rgba(0,0,0,0.22);
     }
     button:disabled { cursor: not-allowed; opacity: 0.6; }
     code {
@@ -549,6 +641,7 @@ function page(res, title, body, extraHeaders = {}) {
       margin: 16px 0 14px;
       padding: 18px;
       text-align: center;
+      box-shadow: 0 0 44px rgba(34, 211, 238, 0.12), inset 0 1px 0 rgba(255,255,255,0.08);
     }
     .error { color: var(--red); }
     .status {
@@ -570,7 +663,7 @@ function page(res, title, body, extraHeaders = {}) {
       width: 34px;
     }
     .timer {
-      background: rgba(255, 211, 106, 0.1);
+      background: linear-gradient(135deg, rgba(255, 211, 106, 0.14), rgba(255,255,255,0.04));
       border: 1px solid rgba(255, 211, 106, 0.35);
       border-radius: 16px;
       color: var(--gold);
@@ -579,6 +672,7 @@ function page(res, title, body, extraHeaders = {}) {
       margin: 14px 0;
       padding: 14px 16px;
       text-align: center;
+      box-shadow: 0 18px 44px rgba(255, 211, 106, 0.08), inset 0 1px 0 rgba(255,255,255,0.10);
     }
     .grid {
       display: grid;
@@ -587,12 +681,18 @@ function page(res, title, body, extraHeaders = {}) {
       margin-top: 28px;
     }
     .tile {
-      background: rgba(255,255,255,0.045);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.03));
       border: 1px solid var(--line);
       border-radius: 16px;
       min-height: 86px;
       padding: 14px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: transform 0.18s ease, border-color 0.18s ease;
+    }
+    .tile:hover {
+      border-color: rgba(34, 211, 238, 0.46);
+      transform: translateY(-2px);
     }
     .tile strong {
       display: block;
@@ -607,7 +707,8 @@ function page(res, title, body, extraHeaders = {}) {
     .hidden { display: none; }
     .tiny { font-size: 13px; margin-top: 14px; }
     @media (prefers-reduced-motion: reduce) {
-      .cursor-glow, body::before, main::after { display: none; }
+      .cursor-glow, .ambient-field, body::before, body::after, main::after { display: none; }
+      main::before, .brand-letter { animation: none; opacity: 1; transform: none; }
     }
     @media (max-width: 640px) {
       body { padding: 14px; }
@@ -618,6 +719,7 @@ function page(res, title, body, extraHeaders = {}) {
   </style>
 </head>
 <body>
+  <div class="ambient-field" aria-hidden="true"><span></span><span></span><span></span></div>
   <div class="cursor-glow" aria-hidden="true"></div>
   <main>${body}</main>
   <script>
@@ -644,6 +746,25 @@ function page(res, title, body, extraHeaders = {}) {
       window.addEventListener("pointerleave", () => {
         targetX = window.innerWidth * 0.5;
         targetY = window.innerHeight * 0.45;
+      });
+
+      document.querySelectorAll(".brand").forEach((brand) => {
+        const textNode = Array.from(brand.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+        if (!textNode) return;
+
+        const title = document.createElement("span");
+        title.className = "brand-title";
+        title.setAttribute("aria-label", "NIN'S HUB");
+
+        "NIN'S HUB".split("").forEach((letter, index) => {
+          const span = document.createElement("span");
+          span.className = "brand-letter";
+          span.style.animationDelay = (index * 0.055) + "s";
+          span.textContent = letter === " " ? "\u00a0" : letter;
+          title.appendChild(span);
+        });
+
+        textNode.replaceWith(title);
       });
 
       paint();
