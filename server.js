@@ -11,16 +11,14 @@ const MIN_LINKVERTISE_TIME_MS = 3 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = process.env.STORE_PATH || path.join(__dirname, "keys.json");
-const PREMIUM_EXPIRES_AT = 32503680000000; // year 3000, used as lifetime access
 
 const WORKINK_URL = "https://work.ink/20lq/nins-hub";
 const WORKINK_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
 const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
 const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
-const DISCORD_INVITE_URL = "https://discord.gg/q9hnMjsgKs";
+const DISCORD_INVITE_URL = "https://discord.gg/RjXT5T6jmd";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
-const PREMIUM_ADMIN_PASS = "nins-premium-admin-5c8f7a2e9d3146b0";
-const PUBLIC_SITE = "https://ninshub.onrender.com";
+const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
 const SKIP_ANTIBYPASS_CHECKS = true;
 const REQUIRE_GATE_POSTBACK = false;
@@ -104,10 +102,6 @@ function makeSession() {
 
 function makeKey() {
   return crypto.randomBytes(18).toString("base64url").toUpperCase();
-}
-
-function makePremiumKey() {
-  return `NINS-PREMIUM-${crypto.randomBytes(18).toString("base64url").toUpperCase()}`;
 }
 
 function cleanId(value, maxLength = 80) {
@@ -703,22 +697,6 @@ function page(res, title, body, extraHeaders = {}) {
       border: 1px solid var(--line);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 28px rgba(0,0,0,0.22);
     }
-    .input {
-      appearance: none;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      color: var(--text);
-      font: inherit;
-      min-width: min(330px, 100%);
-      outline: none;
-      padding: 14px 16px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 28px rgba(0,0,0,0.16);
-    }
-    .input:focus {
-      border-color: var(--line-strong);
-      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.10), inset 0 1px 0 rgba(255,255,255,0.14);
-    }
     .provider-option {
       align-items: center;
       display: inline-flex;
@@ -1065,53 +1043,6 @@ function createKeyPage(res, keys, session, req) {
   );
 }
 
-function createPremiumKey(keys, buyer = "") {
-  const key = makePremiumKey();
-  const createdAt = Date.now();
-  const expiresAt = PREMIUM_EXPIRES_AT;
-
-  keys[key] = {
-    createdAt,
-    expiresAt,
-    premium: true,
-    lifetime: true,
-    buyer: String(buyer || "").slice(0, 80),
-    signature: signKeyRecord(key, createdAt, expiresAt),
-  };
-
-  return { key, record: keys[key] };
-}
-
-function premiumAdminPage(res, generatedKey = "") {
-  return page(
-    res,
-    "Premium Admin",
-    `<section class="key-view">
-      <div class="topline">
-        <div class="brand"><span class="mark">N</span> Nin's Hub</div>
-        <span class="badge good">Premium Admin</span>
-      </div>
-      <h1>Lifetime Premium Keys</h1>
-      <p>Generate a lifetime Premium key after someone buys Premium. They paste this key into the Roblox loader and never need the normal 24 hour key again.</p>
-      <form class="actions" method="get" action="/create-premium">
-        <input type="hidden" name="pass" value="${escapeHtml(PREMIUM_ADMIN_PASS)}" />
-        <input class="input" name="buyer" placeholder="Buyer name or Discord user" maxlength="80" />
-        <button class="primary" type="submit">Generate Premium Key</button>
-      </form>
-      ${
-        generatedKey
-          ? `<p>Your Premium key is ready:</p>
-             <code id="key">${escapeHtml(generatedKey)}</code>
-             <div class="actions">
-               <button class="primary" onclick="navigator.clipboard.writeText(document.getElementById('key').textContent)">Copy Premium Key</button>
-             </div>`
-          : ""
-      }
-      <p class="tiny">Keep this admin link private. Anyone with it can create lifetime keys.</p>
-    </section>`
-  );
-}
-
 function hasLootlabsCompletion(keys, session, step, req) {
   const pending = session && keys.__pending && keys.__pending[session];
   const completion = pending && pending.lootlabs && pending.lootlabs[String(step)];
@@ -1187,86 +1118,15 @@ const server = http.createServer(async (req, res) => {
         <div class="actions">
           <a class="primary provider-option" href="/go?provider=workink"><span class="provider-logo workink">W</span>Use Work.ink</a>
           <a class="secondary provider-option" href="/go?provider=linkvertise"><span class="provider-logo linkvertise">Lv</span>Use Linkvertise</a>
-          <a class="secondary" href="/premium">Buy Premium</a>
         </div>
         <div class="grid">
           <div class="tile"><strong>Session Locked</strong><span>The return must match this browser session.</span></div>
           <div class="tile"><strong>2 Checkpoints</strong><span>Both steps must be completed on the provider they choose.</span></div>
           <div class="tile"><strong>24 Hour Key</strong><span>Keys expire automatically after one day.</span></div>
-          <div class="tile"><strong>Premium</strong><span>Lifetime access skips the 24 hour key system.</span></div>
         </div>
         <p class="tiny">Backing out of a checkpoint will not generate a key.</p>
       </section>`
     );
-  }
-
-  if (url.pathname === "/premium") {
-    saveKeys(keys);
-    return page(
-      res,
-      "Premium",
-      `<section class="hero">
-        <div class="topline">
-          <div class="brand"><span class="mark">N</span> Nin's Hub</div>
-          <span class="badge good">Lifetime</span>
-        </div>
-        <h1>Premium Lifetime Access</h1>
-        <p>Premium gives you a lifetime key, so you do not need to complete the 24 hour key checkpoints again.</p>
-        <div class="grid">
-          <div class="tile"><strong>Lifetime Key</strong><span>One Premium key stays valid permanently.</span></div>
-          <div class="tile"><strong>Loader Ready</strong><span>Paste it into the same Roblox key box.</span></div>
-          <div class="tile"><strong>Discord Support</strong><span>Buy or claim Premium through the official Discord.</span></div>
-        </div>
-        <div class="actions">
-          <a class="primary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Buy In Discord</a>
-          <a class="secondary" href="/generate-key">Back To Free Key</a>
-        </div>
-      </section>`
-    );
-  }
-
-  if (url.pathname === "/premium-admin") {
-    if (String(url.searchParams.get("pass") || "") !== PREMIUM_ADMIN_PASS) {
-      saveKeys(keys);
-      return page(
-        res,
-        "Locked",
-        `<section class="hero">
-          <div class="topline">
-            <div class="brand"><span class="mark">N</span> Nin's Hub</div>
-            <span class="badge bad">Locked</span>
-          </div>
-          <h1>Premium admin locked</h1>
-          <p>This page needs the private admin pass.</p>
-        </section>`
-      );
-    }
-
-    saveKeys(keys);
-    return premiumAdminPage(res);
-  }
-
-  if (url.pathname === "/create-premium") {
-    if (String(url.searchParams.get("pass") || "") !== PREMIUM_ADMIN_PASS) {
-      saveKeys(keys);
-      return json(res, { ok: false, reason: "bad-pass" }, 403);
-    }
-
-    const buyer = String(url.searchParams.get("buyer") || "");
-    const premium = createPremiumKey(keys, buyer);
-    saveKeys(keys);
-
-    if (url.searchParams.get("json") === "1") {
-      return json(res, {
-        ok: true,
-        key: premium.key,
-        premium: true,
-        lifetime: true,
-        buyer: premium.record.buyer,
-      });
-    }
-
-    return premiumAdminPage(res, premium.key);
   }
 
   if (url.pathname === "/go") {
@@ -1657,8 +1517,6 @@ const server = http.createServer(async (req, res) => {
     saveKeys(keys);
     return json(res, {
       valid: true,
-      premium: data.premium === true,
-      lifetime: data.lifetime === true,
       expiresAt: data.expiresAt,
       timeLeftMs: data.expiresAt - Date.now(),
     });
@@ -1692,8 +1550,6 @@ const server = http.createServer(async (req, res) => {
     saveKeys(keys);
     return json(res, {
       valid: true,
-      premium: data.premium === true,
-      lifetime: data.lifetime === true,
       expiresAt: data.expiresAt,
       timeLeftMs: data.expiresAt - Date.now(),
     });
