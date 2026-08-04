@@ -10,7 +10,7 @@ const PENDING_LIFETIME_MS = 30 * 60 * 1000;
 const MIN_LINKVERTISE_TIME_MS = 3 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
-const STORE_PATH = path.join(__dirname, "keys.json");
+const STORE_PATH = process.env.STORE_PATH || path.join(__dirname, "keys.json");
 
 const WORKINK_URL = "https://work.ink/20lq/nins-hub";
 const WORKINK_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
@@ -39,6 +39,7 @@ function loadKeys() {
 }
 
 function saveKeys(keys) {
+  fs.mkdirSync(path.dirname(STORE_PATH), { recursive: true });
   fs.writeFileSync(STORE_PATH, JSON.stringify(keys, null, 2));
 }
 
