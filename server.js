@@ -16,6 +16,7 @@ const WORKINK_URL = "https://work.ink/20lq/nins-hub";
 const WORKINK_URL_2 = "https://work.ink/20lq/nins-hub-last-checkpoint";
 const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
 const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
+const DISCORD_INVITE_URL = "https://discord.gg/q9hnMjsgKs";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
@@ -724,6 +725,10 @@ function page(res, title, body, extraHeaders = {}) {
       background: linear-gradient(135deg, #ff8a00, #ff4d4d);
       box-shadow: 0 0 22px rgba(255, 138, 0, 0.24);
     }
+    .provider-logo.discord {
+      background: linear-gradient(135deg, #5865f2, #22d3ee);
+      box-shadow: 0 0 22px rgba(88, 101, 242, 0.28);
+    }
     button:disabled { cursor: not-allowed; opacity: 0.6; }
     code {
       display: block;
@@ -1105,6 +1110,10 @@ const server = http.createServer(async (req, res) => {
           <span class="badge">24 Hour Access</span>
         </div>
         <h1>Get Your Key</h1>
+        <p>Join the Discord first for updates, support, and loader announcements.</p>
+        <div class="actions">
+          <a class="secondary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Join Discord</a>
+        </div>
         <p>Choose Work.ink or Linkvertise for checkpoint 1. After that, checkpoint 2 must be completed before the 24 hour key is generated.</p>
         <div class="actions">
           <a class="primary provider-option" href="/go?provider=workink"><span class="provider-logo workink">W</span>Use Work.ink</a>
