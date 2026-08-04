@@ -1818,6 +1818,28 @@ const server = http.createServer(async (req, res) => {
       return json(res, { valid: false, reason: "expired" });
     }
 
+    if (!device) {
+      saveKeys(keys);
+      return json(res, { valid: false, reason: "missing-device" });
+    }
+
+    if (data.boundTo) {
+      const sameUser = String(data.boundTo.userId || "") === String(device.userId);
+      const sameDevice = String(data.boundTo.deviceId || "") === String(device.deviceId);
+
+      if (!sameUser || !sameDevice) {
+        saveKeys(keys);
+        return json(res, { valid: false, reason: "already-bound" });
+      }
+    } else {
+      data.boundTo = {
+        userId: device.userId,
+        deviceId: device.deviceId,
+        username: cleanId(url.searchParams.get("username"), 80),
+        boundAt: Date.now(),
+      };
+    }
+
     if (device) {
       keys.__devices[device.lookupKey] = {
         key,
