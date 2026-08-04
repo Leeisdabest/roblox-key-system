@@ -19,6 +19,7 @@ const LINKVERTISE_URL = "https://link-target.net/7498733/mc4yEffjlo2m";
 const LINKVERTISE_URL_2 = "https://link-hub.net/7498733/Raf2W9vpq3sS";
 const DISCORD_INVITE_URL = "https://discord.gg/RjXT5T6jmd";
 const SELLIX_PAYMENT_URL = "https://nins-hub.sellix.cx/p/nins-hub-premium";
+const CASHAPP_PAYMENT_URL = "https://cash.app/pay/link/43zy286b";
 const SELLIX_API_KEY = process.env.SELLIX_API_KEY || "sk_AOBwMqpj9kRrDMukMhFq0JA0DcXpjb4VNq6z922U";
 const SELLIX_PRODUCT_MATCH = "premium";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
@@ -1343,7 +1344,7 @@ const server = http.createServer(async (req, res) => {
           <span class="badge good">Lifetime</span>
         </div>
         <h1>Premium Lifetime Access</h1>
-        <p>Premium gives you a lifetime key, so you do not need to complete the 24 hour key checkpoints again.</p>
+      <p>Premium gives you a lifetime key, so you do not need to complete the 24 hour key checkpoints again.</p>
         <div class="grid">
           <div class="tile"><strong>Lifetime Key</strong><span>One Premium key stays valid permanently.</span></div>
           <div class="tile"><strong>Loader Ready</strong><span>Paste it into the same Roblox key box.</span></div>
@@ -1351,6 +1352,7 @@ const server = http.createServer(async (req, res) => {
         </div>
         <div class="actions">
           <a class="primary" href="${SELLIX_PAYMENT_URL}" target="_blank" rel="noopener">Buy With Sellix</a>
+          <a class="secondary" href="/cashapp">Pay With Cash App</a>
           <a class="secondary" href="/premium-claim">I Bought</a>
           <a class="secondary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Need Help?</a>
           <a class="secondary" href="/generate-key">Back To Free Key</a>
@@ -1362,6 +1364,32 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/premium-claim") {
     saveKeys(keys);
     return premiumClaimPage(res);
+  }
+
+  if (url.pathname === "/cashapp") {
+    saveKeys(keys);
+    return page(
+      res,
+      "Cash App Premium",
+      `<section class="hero">
+        <div class="topline">
+          <div class="brand"><span class="mark">N</span> Nin's Hub</div>
+          <span class="badge good">Manual Payment</span>
+        </div>
+        <h1>Cash App Premium</h1>
+        <p>Cash App payments are manual. After paying, join the Discord and open a Premium Ticket so staff can verify your payment and send your lifetime Premium key.</p>
+        <div class="grid">
+          <div class="tile"><strong>Step 1</strong><span>Pay through Cash App.</span></div>
+          <div class="tile"><strong>Step 2</strong><span>Join the Discord.</span></div>
+          <div class="tile"><strong>Step 3</strong><span>Open a Premium Ticket with payment proof.</span></div>
+        </div>
+        <div class="actions">
+          <a class="primary" href="${CASHAPP_PAYMENT_URL}" target="_blank" rel="noopener">Open Cash App</a>
+          <a class="secondary provider-option" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener"><span class="provider-logo discord">D</span>Join Discord</a>
+          <a class="secondary" href="/premium">Back</a>
+        </div>
+      </section>`
+    );
   }
 
   if (url.pathname === "/claim-premium") {
