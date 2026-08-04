@@ -12,11 +12,15 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 90;
 const STORE_PATH = path.join(__dirname, "keys.json");
 
-const LINKVERTISE_URL = "https://loot-link.com/s?MgZV8YM2";
-const LINKVERTISE_URL_2 = "https://loot-link.com/s?aIWnb6GR";
+const LINKVERTISE_URL = "https://work.ink/20lq/nins-hub-last-checkpoint";
+const LINKVERTISE_URL_2 = "https://work.ink/20lq/nins-hub";
 const UNLOCK_PASS = "3b913615466d0554a0ac12eb50fde9be4d35685300eef38ecf993a6ce7e45f12";
 const PUBLIC_SITE = "https://roblox-key-system-hr3h.onrender.com";
 const KEY_SIGNING_SECRET = "nins-hub-key-signing-secret-2026-change-this-later";
+const SKIP_ANTIBYPASS_CHECKS = true;
+const REQUIRE_GATE_POSTBACK = false;
+const USE_LOOTLABS_POSTBACK = false;
+const LOOTLABS_POSTBACK_TOKEN = "";
 const ANTIBYPASS_API_KEY = "1409cc373e11bc24318e4b6703222a538a82d0202b986b30ad6959ca950db622";
 const LINKVERTISE_ANTI_BYPASS_TOKEN = "1409cc373e11bc24318e4b6703222a538a82d0202b986b30ad6959ca950db622";
 const REQUIRE_ANTIBYPASS_TOKEN = true;
@@ -332,19 +336,20 @@ function page(res, title, body, extraHeaders = {}) {
   <style>
     :root {
       color-scheme: dark;
-      --bg: #080a0f;
-      --panel: rgba(18, 22, 31, 0.92);
-      --panel-2: #0d111a;
-      --line: rgba(160, 174, 205, 0.18);
-      --line-strong: rgba(126, 148, 255, 0.55);
+      --bg: #05070d;
+      --panel: rgba(13, 17, 28, 0.88);
+      --panel-2: rgba(5, 8, 16, 0.86);
+      --line: rgba(170, 192, 255, 0.20);
+      --line-strong: rgba(76, 217, 255, 0.62);
       --text: #f7f9ff;
-      --muted: #aab3c8;
-      --blue: #6f83ff;
-      --cyan: #38d6ff;
+      --muted: #b7c1d8;
+      --blue: #6675ff;
+      --cyan: #22d3ee;
       --green: #28d27f;
       --green-hover: #35e391;
       --red: #ff5d73;
       --gold: #ffd36a;
+      --pink: #ff4fd8;
     }
     * { box-sizing: border-box; }
     body {
@@ -354,21 +359,26 @@ function page(res, title, body, extraHeaders = {}) {
       place-items: center;
       padding: 24px;
       background:
-        linear-gradient(135deg, rgba(111, 131, 255, 0.16), transparent 34%),
-        linear-gradient(315deg, rgba(40, 210, 127, 0.12), transparent 32%),
-        repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 72px),
-        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 72px),
+        radial-gradient(circle at 18% 12%, rgba(102, 117, 255, 0.30), transparent 31%),
+        radial-gradient(circle at 82% 76%, rgba(40, 210, 127, 0.19), transparent 28%),
+        radial-gradient(circle at 68% 16%, rgba(255, 79, 216, 0.16), transparent 24%),
+        linear-gradient(135deg, rgba(255,255,255,0.035), transparent 30%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 82px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.032) 0 1px, transparent 1px 82px),
         var(--bg);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     }
     main {
       position: relative;
-      width: min(840px, 100%);
+      width: min(900px, 100%);
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255,255,255,0.05);
+      border-radius: 24px;
+      box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.62),
+        0 0 80px rgba(34, 211, 238, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.08);
       overflow: hidden;
       padding: 0;
       backdrop-filter: blur(18px);
@@ -376,11 +386,11 @@ function page(res, title, body, extraHeaders = {}) {
     main::before {
       content: "";
       display: block;
-      height: 4px;
-      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--gold));
+      height: 5px;
+      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--gold), var(--pink));
     }
     .hero, .key-view {
-      padding: clamp(24px, 5vw, 44px);
+      padding: clamp(28px, 5vw, 54px);
     }
     .topline {
       align-items: center;
@@ -400,15 +410,16 @@ function page(res, title, body, extraHeaders = {}) {
     .mark {
       align-items: center;
       background: linear-gradient(135deg, var(--blue), var(--green));
-      border-radius: 12px;
-      box-shadow: 0 12px 30px rgba(111, 131, 255, 0.25);
+      border-radius: 14px;
+      box-shadow: 0 16px 36px rgba(34, 211, 238, 0.22), inset 0 1px 0 rgba(255,255,255,0.28);
       display: inline-flex;
       height: 40px;
       justify-content: center;
       width: 40px;
     }
     .badge {
-      border: 1px solid rgba(111, 131, 255, 0.35);
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(111, 131, 255, 0.42);
       border-radius: 999px;
       color: #dce3ff;
       display: inline-flex;
@@ -425,6 +436,11 @@ function page(res, title, body, extraHeaders = {}) {
       font-size: clamp(34px, 7vw, 64px);
       line-height: 0.95;
       letter-spacing: 0;
+      background: linear-gradient(90deg, #ffffff, #d9f7ff 42%, #9dffc9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 18px 55px rgba(34, 211, 238, 0.18);
     }
     p {
       color: var(--muted);
@@ -443,21 +459,21 @@ function page(res, title, body, extraHeaders = {}) {
     a, button {
       appearance: none;
       border: 0;
-      border-radius: 10px;
+      border-radius: 12px;
       background: linear-gradient(135deg, var(--green), #18a96b);
       color: white;
       cursor: pointer;
       display: inline-block;
       font-weight: 700;
       margin-top: 0;
-      padding: 13px 18px;
+      padding: 14px 20px;
       text-decoration: none;
       transition: transform 0.16s ease, filter 0.16s ease, border-color 0.16s ease;
     }
     a:hover, button:hover { filter: brightness(1.08); transform: translateY(-1px); }
     .primary {
-      background: linear-gradient(135deg, var(--blue), #4858ff);
-      box-shadow: 0 12px 28px rgba(111, 131, 255, 0.22);
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      box-shadow: 0 16px 34px rgba(34, 211, 238, 0.24);
     }
     .secondary {
       background: rgba(255,255,255,0.06);
@@ -469,7 +485,7 @@ function page(res, title, body, extraHeaders = {}) {
       overflow-wrap: anywhere;
       background: var(--panel-2);
       border: 1px solid var(--line-strong);
-      border-radius: 12px;
+      border-radius: 16px;
       color: white;
       font-size: clamp(15px, 3vw, 20px);
       font-weight: 800;
@@ -501,7 +517,7 @@ function page(res, title, body, extraHeaders = {}) {
     .timer {
       background: rgba(255, 211, 106, 0.1);
       border: 1px solid rgba(255, 211, 106, 0.35);
-      border-radius: 12px;
+      border-radius: 16px;
       color: var(--gold);
       font-size: 24px;
       font-weight: 800;
@@ -518,9 +534,10 @@ function page(res, title, body, extraHeaders = {}) {
     .tile {
       background: rgba(255,255,255,0.045);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 16px;
       min-height: 86px;
       padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
     }
     .tile strong {
       display: block;
@@ -723,14 +740,14 @@ function hasLootlabsCompletion(keys, session, step, req) {
 function lootlabsWaitingPage(res, step, href) {
   return page(
     res,
-    "Waiting For LootLabs",
+        "Waiting For Work.ink",
     `<section class="hero">
       <div class="topline">
         <div class="brand"><span class="mark">N</span> Nin's Hub</div>
         <span class="badge bad">Waiting</span>
       </div>
-      <h1>Finish LootLabs first</h1>
-      <p>LootLabs has not confirmed checkpoint ${step} yet. Finish the task from the key page, then let it redirect back here.</p>
+      <h1>Finish Work.ink first</h1>
+      <p>Finish checkpoint ${step} from the key page, then let Work.ink redirect back here.</p>
       <div class="actions">
         <a class="primary" href="${escapeHtml(href)}">Open Checkpoint ${step} Again</a>
       </div>
@@ -755,14 +772,14 @@ const server = http.createServer(async (req, res) => {
       saveKeys(keys);
       return page(
         res,
-        "Finish Linkvertise",
+        "Finish Work.ink",
         `<section class="hero">
           <div class="topline">
             <div class="brand"><span class="mark">N</span> Nin's Hub</div>
             <span class="badge bad">Not Verified</span>
           </div>
           <h1>Finish Checkpoint 1</h1>
-          <p>You came back to the key page, so no key was generated. Finish the first Linkvertise until it sends you to the checkpoint page automatically.</p>
+          <p>You came back to the key page, so no key was generated. Finish the first Work.ink checkpoint until it sends you back automatically.</p>
           <div class="actions">
             <a class="primary" href="/go">Open Checkpoint 1 Again</a>
           </div>
@@ -786,10 +803,10 @@ const server = http.createServer(async (req, res) => {
         </div>
         <div class="grid">
           <div class="tile"><strong>Session Locked</strong><span>The return must match this browser session.</span></div>
-          <div class="tile"><strong>2 Checkpoints</strong><span>Both Linkvertise steps must be completed.</span></div>
+          <div class="tile"><strong>2 Checkpoints</strong><span>Both Work.ink steps must be completed.</span></div>
           <div class="tile"><strong>24 Hour Key</strong><span>Keys expire automatically after one day.</span></div>
         </div>
-        <p class="tiny">Backing out of Linkvertise will not generate a key.</p>
+        <p class="tiny">Backing out of Work.ink will not generate a key.</p>
       </section>`
     );
   }
@@ -805,16 +822,22 @@ const server = http.createServer(async (req, res) => {
     saveFlow(keys, req, session, 1, keys.__pending[session].createdAt);
     saveKeys(keys);
 
-    return redirect(res, withPuid(LINKVERTISE_URL, session), {
+    return redirect(res, LINKVERTISE_URL, {
       "Set-Cookie": sessionCookieSet(session),
     });
   }
 
   if (url.pathname === "/lootlabs-postback") {
+    const token = String(url.searchParams.get("token") || url.searchParams.get("secret") || url.searchParams.get("api_token") || "");
     const clickId = String(url.searchParams.get("click_id") || url.searchParams.get("puid") || "");
     const uniqueId = String(url.searchParams.get("unique_id") || url.searchParams.get("transaction_id") || makeSession());
     const stepValue = String(url.searchParams.get("step") || "");
     const pending = clickId && keys.__pending[clickId];
+
+    if (LOOTLABS_POSTBACK_TOKEN && token !== LOOTLABS_POSTBACK_TOKEN) {
+      saveKeys(keys);
+      return text(res, "bad token", 403);
+    }
 
     if (!pending) {
       saveKeys(keys);
@@ -842,7 +865,7 @@ const server = http.createServer(async (req, res) => {
     const pending = flowState.pending;
     const realSession = flowState.session;
 
-    if (isBypassReferer(req)) {
+    if (!SKIP_ANTIBYPASS_CHECKS && isBypassReferer(req)) {
       saveKeys(keys);
       return page(
         res,
@@ -852,8 +875,8 @@ const server = http.createServer(async (req, res) => {
             <div class="brand"><span class="mark">N</span> Nin's Hub</div>
             <span class="badge bad">Bypass Blocked</span>
           </div>
-          <h1>Open Linkvertise normally</h1>
-          <p>This return came from a known bypass service. Start from the key page and complete Linkvertise normally.</p>
+          <h1>Open Work.ink normally</h1>
+          <p>Start from the key page and complete Work.ink normally.</p>
           <div class="actions">
             <a class="primary" href="/generate-key">Start Again</a>
           </div>
@@ -861,10 +884,12 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    const antiBypass = await verifyAntiBypass(url, req);
-    if (!antiBypass.ok) {
-      saveKeys(keys);
-      return antiBypassBlockedPage(res, antiBypass);
+    if (!SKIP_ANTIBYPASS_CHECKS && !USE_LOOTLABS_POSTBACK) {
+      const antiBypass = await verifyAntiBypass(url, req);
+      if (!antiBypass.ok) {
+        saveKeys(keys);
+        return antiBypassBlockedPage(res, antiBypass);
+      }
     }
 
     if (pass !== UNLOCK_PASS) {
@@ -905,7 +930,7 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    if (!hasLootlabsCompletion(keys, realSession, 1, req)) {
+    if (REQUIRE_GATE_POSTBACK && !hasLootlabsCompletion(keys, realSession, 1, req)) {
       saveKeys(keys);
       return lootlabsWaitingPage(res, 1, "/go");
     }
@@ -946,7 +971,7 @@ const server = http.createServer(async (req, res) => {
           <span class="badge good">Checkpoint 1 Complete</span>
         </div>
         <h1>One more step</h1>
-        <p>Checkpoint 1 is verified. Open checkpoint 2 and let it redirect you back here to generate your 24 hour key.</p>
+          <p>Checkpoint 1 is verified. Open checkpoint 2 and let Work.ink redirect you back here to generate your 24 hour key.</p>
         <div class="actions">
           <a class="primary" href="/go2">Open Checkpoint 2</a>
         </div>
@@ -989,7 +1014,7 @@ const server = http.createServer(async (req, res) => {
     saveFlow(keys, req, realSession, 2, pending.createdAt);
     saveKeys(keys);
 
-    return redirect(res, withPuid(LINKVERTISE_URL_2, realSession), {
+    return redirect(res, LINKVERTISE_URL_2, {
       "Set-Cookie": sessionCookieSet(realSession),
     });
   }
@@ -1006,7 +1031,7 @@ const server = http.createServer(async (req, res) => {
     const pending = flowState.pending;
     const realSession = flowState.session;
 
-    if (isBypassReferer(req)) {
+    if (!SKIP_ANTIBYPASS_CHECKS && isBypassReferer(req)) {
       saveKeys(keys);
       return page(
         res,
@@ -1016,8 +1041,8 @@ const server = http.createServer(async (req, res) => {
             <div class="brand"><span class="mark">N</span> Nin's Hub</div>
             <span class="badge bad">Bypass Blocked</span>
           </div>
-          <h1>Open Linkvertise normally</h1>
-          <p>This return came from a known bypass service. Start from the key page and complete both checkpoints normally.</p>
+          <h1>Open Work.ink normally</h1>
+          <p>Start from the key page and complete both Work.ink checkpoints normally.</p>
           <div class="actions">
             <a class="primary" href="/generate-key">Start Again</a>
           </div>
@@ -1025,10 +1050,12 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    const antiBypass = await verifyAntiBypass(url, req);
-    if (!antiBypass.ok) {
-      saveKeys(keys);
-      return antiBypassBlockedPage(res, antiBypass);
+    if (!SKIP_ANTIBYPASS_CHECKS && !USE_LOOTLABS_POSTBACK) {
+      const antiBypass = await verifyAntiBypass(url, req);
+      if (!antiBypass.ok) {
+        saveKeys(keys);
+        return antiBypassBlockedPage(res, antiBypass);
+      }
     }
 
     if (pass !== UNLOCK_PASS) {
@@ -1042,9 +1069,9 @@ const server = http.createServer(async (req, res) => {
             <span class="badge bad">Locked</span>
           </div>
           <h1>Wrong Return</h1>
-          <p>The return pass is wrong. Set the second Linkvertise destination to the exact /final-checkpoint link from the README.</p>
+          <p>The return pass is wrong. Make sure your Work.ink destination uses the checkpoint URL exactly.</p>
           <div class="actions">
-            <a class="primary" href="/generate-key">Go Through Linkvertise</a>
+            <a class="primary" href="/generate-key">Go Through Work.ink</a>
           </div>
         </section>`
       );
@@ -1069,7 +1096,7 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    if (!hasLootlabsCompletion(keys, realSession, 2, req)) {
+    if (REQUIRE_GATE_POSTBACK && !hasLootlabsCompletion(keys, realSession, 2, req)) {
       saveKeys(keys);
       return lootlabsWaitingPage(res, 2, "/go2");
     }
@@ -1107,9 +1134,9 @@ const server = http.createServer(async (req, res) => {
           <span class="badge bad">Shortcut Blocked</span>
         </div>
         <h1>Locked</h1>
-        <p>This shortcut is disabled. Finish Linkvertise until it opens the verified return page.</p>
+          <p>This shortcut is disabled. Finish Work.ink until it opens the verified return page.</p>
         <div class="actions">
-          <a class="primary" href="/generate-key">Go Through Linkvertise</a>
+          <a class="primary" href="/generate-key">Go Through Work.ink</a>
         </div>
       </section>`
     );
