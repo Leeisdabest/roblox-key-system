@@ -237,6 +237,16 @@ function withPuid(targetUrl, puid) {
   return `${targetUrl}${separator}puid=${encodeURIComponent(puid)}`;
 }
 
+function withGateState(targetUrl, session, step) {
+  const separator = targetUrl.includes("?") ? "&" : "?";
+  const state = crypto
+    .createHash("sha256")
+    .update(`${session}.${step}.${KEY_SIGNING_SECRET}`)
+    .digest("hex")
+    .slice(0, 18);
+  return `${targetUrl}${separator}sid=${encodeURIComponent(session)}&step=${step}&state=${state}`;
+}
+
 async function verifyAntiBypass(url, req) {
   if (!REQUIRE_ANTIBYPASS_TOKEN) {
     return { ok: true };
@@ -350,6 +360,8 @@ function page(res, title, body, extraHeaders = {}) {
       --red: #ff5d73;
       --gold: #ffd36a;
       --pink: #ff4fd8;
+      --mx: 50vw;
+      --my: 45vh;
     }
     * { box-sizing: border-box; }
     body {
@@ -368,9 +380,37 @@ function page(res, title, body, extraHeaders = {}) {
         var(--bg);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 38%, rgba(34, 211, 238, 0.05) 48%, transparent 58%),
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.045), transparent 21%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .cursor-glow {
+      position: fixed;
+      left: var(--mx);
+      top: var(--my);
+      width: min(46vw, 480px);
+      height: min(46vw, 480px);
+      background:
+        radial-gradient(circle, rgba(34, 211, 238, 0.22), rgba(102, 117, 255, 0.13) 38%, rgba(40, 210, 127, 0.08) 54%, transparent 72%);
+      border-radius: 999px;
+      filter: blur(12px);
+      opacity: 0.76;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 0;
     }
     main {
       position: relative;
+      z-index: 1;
       width: min(900px, 100%);
       background: var(--panel);
       border: 1px solid var(--line);
@@ -382,6 +422,7 @@ function page(res, title, body, extraHeaders = {}) {
       overflow: hidden;
       padding: 0;
       backdrop-filter: blur(18px);
+      isolation: isolate;
     }
     main::before {
       content: "";
@@ -389,8 +430,22 @@ function page(res, title, body, extraHeaders = {}) {
       height: 5px;
       background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--gold), var(--pink));
     }
+    main::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.08), transparent 24%),
+        linear-gradient(125deg, transparent 24%, rgba(34, 211, 238, 0.06), transparent 54%);
+      mix-blend-mode: screen;
+      opacity: 0.72;
+      pointer-events: none;
+      z-index: -1;
+    }
     .hero, .key-view {
       padding: clamp(28px, 5vw, 54px);
+      position: relative;
+      z-index: 1;
     }
     .topline {
       align-items: center;
@@ -551,6 +606,9 @@ function page(res, title, body, extraHeaders = {}) {
     }
     .hidden { display: none; }
     .tiny { font-size: 13px; margin-top: 14px; }
+    @media (prefers-reduced-motion: reduce) {
+      .cursor-glow, body::before, main::after { display: none; }
+    }
     @media (max-width: 640px) {
       body { padding: 14px; }
       .topline { align-items: flex-start; flex-direction: column; }
@@ -560,7 +618,37 @@ function page(res, title, body, extraHeaders = {}) {
   </style>
 </head>
 <body>
+  <div class="cursor-glow" aria-hidden="true"></div>
   <main>${body}</main>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      let x = window.innerWidth * 0.5;
+      let y = window.innerHeight * 0.45;
+      let targetX = x;
+      let targetY = y;
+
+      function paint() {
+        x += (targetX - x) * 0.11;
+        y += (targetY - y) * 0.11;
+        root.style.setProperty("--mx", x.toFixed(2) + "px");
+        root.style.setProperty("--my", y.toFixed(2) + "px");
+        requestAnimationFrame(paint);
+      }
+
+      window.addEventListener("pointermove", (event) => {
+        targetX = event.clientX;
+        targetY = event.clientY;
+      }, { passive: true });
+
+      window.addEventListener("pointerleave", () => {
+        targetX = window.innerWidth * 0.5;
+        targetY = window.innerHeight * 0.45;
+      });
+
+      paint();
+    })();
+  </script>
 </body>
 </html>`);
 }
@@ -816,13 +904,17 @@ const server = http.createServer(async (req, res) => {
     keys.__pending[session] = {
       createdAt: Date.now(),
       step: 1,
+      step1Started: true,
+      step1Used: false,
+      step2Started: false,
+      step2Used: false,
       clientLock: clientLock(req),
       expiresAt: Date.now() + PENDING_LIFETIME_MS,
     };
     saveFlow(keys, req, session, 1, keys.__pending[session].createdAt);
     saveKeys(keys);
 
-    return redirect(res, LINKVERTISE_URL, {
+    return redirect(res, withGateState(LINKVERTISE_URL, session, 1), {
       "Set-Cookie": sessionCookieSet(session),
     });
   }
@@ -903,7 +995,7 @@ const server = http.createServer(async (req, res) => {
             <span class="badge bad">Checkpoint Locked</span>
           </div>
           <h1>Start from the key page</h1>
-          <p>Checkpoint 1 must be opened from this website before checkpoint 2 is available.</p>
+          <p>This checkpoint was already used or opened out of order. Start from the key page and follow the buttons.</p>
           <div class="actions">
             <a class="primary" href="/generate-key">Start Again</a>
           </div>
@@ -911,7 +1003,7 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    if (!pending) {
+    if (!pending || pending.step !== 1 || pending.step1Used) {
       saveKeys(keys);
       return page(
         res,
@@ -955,8 +1047,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     pending.step = 2;
+    pending.step1Used = true;
     pending.checkpointAt = Date.now();
     pending.createdAt = Date.now();
+    pending.step2Started = true;
     pending.expiresAt = Date.now() + PENDING_LIFETIME_MS;
     keys.__pending[realSession] = pending;
     saveFlow(keys, req, realSession, 2, pending.createdAt);
@@ -1014,7 +1108,7 @@ const server = http.createServer(async (req, res) => {
     saveFlow(keys, req, realSession, 2, pending.createdAt);
     saveKeys(keys);
 
-    return redirect(res, LINKVERTISE_URL_2, {
+    return redirect(res, withGateState(LINKVERTISE_URL_2, realSession, 2), {
       "Set-Cookie": sessionCookieSet(realSession),
     });
   }
@@ -1077,7 +1171,7 @@ const server = http.createServer(async (req, res) => {
       );
     }
 
-    if (!pending || pending.step !== 2) {
+    if (!pending || pending.step !== 2 || !pending.step2Started || pending.step2Used) {
       saveKeys(keys);
       return page(
         res,
@@ -1088,7 +1182,7 @@ const server = http.createServer(async (req, res) => {
             <span class="badge bad">Session Missing</span>
           </div>
           <h1>Finish both checkpoints first</h1>
-          <p>This return page only works after checkpoint 1 and checkpoint 2 are completed from this website.</p>
+          <p>This return page only works once, after checkpoint 2 is opened from this website in the same browser.</p>
           <div class="actions">
             <a class="primary" href="/generate-key">Start Again</a>
           </div>
@@ -1119,6 +1213,10 @@ const server = http.createServer(async (req, res) => {
         </section>`
       );
     }
+
+    pending.step2Used = true;
+    keys.__pending[realSession] = pending;
+    saveKeys(keys);
 
     return createKeyPage(res, keys, realSession, req);
   }
